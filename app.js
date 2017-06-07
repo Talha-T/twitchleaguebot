@@ -116,7 +116,7 @@ client.on("chat", function (channel, userstate, message, self) {
                         }
                         
                         if (_res.length == 0) {
-                            msg("Hydroluxx UNRANKED");
+                            msg("UNRANKED");
                         }
                         else {
                             msg(text.replaceAll("undefined",""));
