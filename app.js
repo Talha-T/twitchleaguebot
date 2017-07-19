@@ -33,7 +33,7 @@ var irelia =  new Irelia({
     secure: true,
     host: 'api.riotgames.com',
     path: '/lol/',
-    key: 'RGAPI-323C1392-BEDB-4D03-85EC-4DE4B417E253',
+    key: 'key',
     debug: true
 });
 
