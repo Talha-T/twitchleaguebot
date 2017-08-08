@@ -2,6 +2,7 @@ var tmi = require("tmi.js");
 var fs = require('fs');
 var champions;
 var obj;
+var say = false;
 fs.readFile('champions.txt', 'utf8', function (err, data) {
     if (err) throw err;
     obj = JSON.parse(data);
@@ -12,6 +13,15 @@ var turkish = true;
 var defaultRegion = "tr";
 
 var flashes = {};
+
+function contains(a, obj) {
+    for (var i = 0; i < a.length; i++) {
+        if (a[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
 
 if (!String.prototype.format) {
     String.prototype.format = function () {
@@ -63,10 +73,15 @@ if (process.argv.length > 2) {
     } else if (process.argv.length > 3) {
         defSum = process.argv[3];
         defaultRegion = process.argv[4];
-	ownerOnly = true;
+        ownerOnly = true;
     }
 
 }
+
+if (contains(process.argv, "say")) {
+    say = true;
+}
+
 var options = {
     options: {
         debug: true
@@ -77,7 +92,7 @@ var options = {
     },
     identity: {
         username: "LigBot",
-        password: "oauthpasswordhere"
+        password: "oauthpasshere"
     },
     channels: [channel]
 };
@@ -215,15 +230,15 @@ client.on("chat", function (channel, userstate, message, self) {
                 var summName = message.substr(space + 1, comma - space - 1);
                 var champName = message.substr(comma + 1, comma2 - comma - 1);
                 var region = message.substr(comma2 + 1);
-		var summErr = false;
+                var summErr = false;
                 irelia.getSummonerByName(region, summName, function (err, res) {
                     if (err) {
                         if (!err.statusCode == 404) {
                             msg(notFoundFormat().format(region, summName));
-				summErr = true;
+                            summErr = true;
                         } else {
                             msg(summonerNotFoundFormat().format(region, summName));
-			    summErr = true;
+                            summErr = true;
                         }
                     } else {
                         var summ = res;
@@ -260,7 +275,7 @@ client.on("chat", function (channel, userstate, message, self) {
         } else {
             var id;
             var summName = defSum;
-	    var champName = message.substr(message.indexOf(" ") + 1);
+            var champName = message.substr(message.indexOf(" ") + 1);
             var region = defaultRegion;
             var summErr = false;
             irelia.getSummonerByName(region, summName, function (err, res) {
@@ -277,22 +292,22 @@ client.on("chat", function (channel, userstate, message, self) {
                         if (champ.name.toLocaleLowerCase() == champName.toLocaleLowerCase()) {
                             champId = champ.id;
                         }
-		else summErr = true;
+                        else summErr = true;
                     }
                     if (champId == -100) {
                         msg(championNotFoundFormat().format(champName));
                     }
                     irelia.getChampionMastery(region, id, champId, function (err, res) {
-                            if (err && !summErr) {
-                                if (err.statusCode == 404) {
-                                    msg(championNotPlayedFormat().format(summName, champName));
-                                } else {
-                                    msg(masteryNotFoundFormat(region, summName, champName));
-                                }
-                            } else if (!err) {
-                                msg(masteryFormat().format(summName, champName, res.championPoints, res.championLevel));
+                        if (err && !summErr) {
+                            if (err.statusCode == 404) {
+                                msg(championNotPlayedFormat().format(summName, champName));
+                            } else {
+                                msg(masteryNotFoundFormat(region, summName, champName));
                             }
-                        });
+                        } else if (!err) {
+                            msg(masteryFormat().format(summName, champName, res.championPoints, res.championLevel));
+                        }
+                    });
                 }
             });
 
@@ -305,7 +320,10 @@ client.on("chat", function (channel, userstate, message, self) {
 });
 
 function msg(message) {
-    client.action(channel, message);
+    if (say)
+        client.say(channel, message);
+    else
+        client.action(channel, message);
 }
 
 function helpFormat() {
